@@ -1,10 +1,11 @@
 /*@
-//predicate Positive(unit a, int v; unit b) = v >= 0 &*& b == unit;
+predicate Valid(unit a, A o; unit b) = o != null &*& AInv(o) &*& b == unit;
+
+predicate AInv(A o;) = o.a |-> ?v &*& v >= 0;
 
 predicate QueueInv(Queue q; int n, int m) = 
 	q.array |-> ?a
     &*& a != null
-    &*& array_slice(a,0,a.length,?elems)
     &*& q.numelements |-> n
     &*& m == a.length
     &*& q.head |-> ?h
@@ -14,12 +15,34 @@ predicate QueueInv(Queue q; int n, int m) =
     &*& (h==t? n==0 || n==a.length : true)
     &*& (h>t? n==h-t : true)
     &*& (h<t? n==h-t + a.length : true)
+  
+    &*& (h>t || h==t && n==0 ?
+    	    array_slice(a,0,t,?out1)
+    	&*& array_slice_deep(a,t,h,Valid, unit, ?in, _)
+    	&*& array_slice(a, h, a.length, ?out2)
+    	:
+    	    array_slice_deep(a,0,h,Valid, unit,?in1,_)
+    	&*& array_slice(a,h,t,?out)
+    	&*& array_slice_deep(a,t,a.length,Valid, unit,?in2,_)
+        )
     ; 
 @*/
 
+class A{
+    int a;
+    
+    public A(int a)
+    //@ requires a >= 0;
+    //@ ensures AInv(this);
+    {
+	    this.a = a;
+    }
+}
+
+
 //Queue based on a circular buffer.
 class Queue {
-    int[] array;
+    A[] array;
     int numelements;
     int head;
     int tail;
@@ -29,15 +52,15 @@ class Queue {
     //@ requires size > 0;
     //@ ensures QueueInv(this,0,size);
     {
-        array = new int[size];
+        array = new A[size];
         numelements = 0;
         head = 0;
         tail = 0;
     }
   
     //places the int v at the end of this Queue
-    void enqueue(int v)
-    //@ requires QueueInv(this,?n,?m) &*& n < m;
+    void enqueue(A v)
+    //@ requires QueueInv(this,?n,?m) &*& v!=null &*& AInv(v) &*& n < m;
     //@ ensures QueueInv(this,n+1,m);
     {
         array[head++] = v;
@@ -46,11 +69,12 @@ class Queue {
     }
   
     //retrieves the element at the start of this Queue.
-    int dequeue()
+    A dequeue()
     //@ requires QueueInv(this,?n,?m) &*& n>0;
     //@ ensures QueueInv(this,n-1,m);
     {
-        int v = array[tail++];
+        A v = array[tail++];
+        array[tail-1] = null;
         numelements--;
         if(tail==array.length) tail=0;
         return v;
