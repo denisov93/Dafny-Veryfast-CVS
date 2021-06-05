@@ -1,4 +1,5 @@
 import java.util.concurrent.locks.*;
+import java.lang.System.out;
 
 /*@
 predicate Valid(unit a, A o; unit b) = o != null &*& AInv(o) &*& b == unit;
@@ -187,6 +188,16 @@ class CQueue {
         ;
 @*/
 
+/*@
+    predicate ConsumerInv(Consumer c;) = 
+            c.q |-> ?q
+        &*& q != null 
+        &*& [_]CQueueInv(q)
+        &*& c.id |-> ?v
+        &*& v >= 0
+        ;
+@*/
+
 //@predicate frac(real f) = true;
 
 class Producer implements Runnable{
@@ -210,13 +221,49 @@ class Producer implements Runnable{
         while(true)
         //@ invariant ProducerInv(this);
         {
-            q.enqueue(new A(id));
+            A a = new A(id);
+            q.enqueue(a);
+            //System.out.println("P[id:"+id+"] Enqueued["+ a.a +"]");
+         
+            //try {
+            //	Thread.sleep(100);
+	    //} catch (InterruptedException e) {
+            //e.printStackTrace();
+	    //}
         }
     }
 }
 
-class Consumer{
+class Consumer implements Runnable{
+    CQueue q;
+    int id;
 
+    //@ predicate pre() = ConsumerInv(this);
+    //@ predicate post() = emp;
+    public Consumer(CQueue q, int id)
+    //@ requires q != null &*& frac(?f) &*& [f]CQueueInv(q) &*& id >= 0;
+    //@ ensures ConsumerInv(this);
+    {
+        this.q = q;
+        this.id = id;
+    }
+
+    public void run()
+        //@ requires pre();
+        //@ ensures post();
+    {
+        while(true)
+        //@ invariant ConsumerInv(this);
+        {
+            A a = q.dequeue();
+            
+            //try {
+            //	Thread.sleep(100);
+	    //} catch (InterruptedException e) {
+	    //e.printStackTrace();
+	    //}
+        }
+    }
 }
 
 class ProducerConsumer {
@@ -234,8 +281,9 @@ class ProducerConsumer {
             //@ open frac(f);
             //@ close frac(f/2);
             new Thread(new Producer(q,i)).start();
-            //@ close frac(f/2);
-            //new Thread(new Consumer(q)).start();
+            //@ close frac(f/4);
+            new Thread(new Consumer(q,100+i)).start();
+            //@ close frac(f/4);
         }
     }
 }
