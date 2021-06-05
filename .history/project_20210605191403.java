@@ -231,6 +231,10 @@ class Producer implements Runnable{
         while(true)
         //@ invariant ProducerInv(this);
         {
+<<<<<<< HEAD
+            q.enqueue(new A(id));
+            
+=======
             A a = new A(id);
             q.enqueue(a);
             //System.out.println("P[id:"+id+"] Enqueued["+ a.a +"]");
@@ -240,6 +244,7 @@ class Producer implements Runnable{
 	    //} catch (InterruptedException e) {
             //e.printStackTrace();
 	    //}
+>>>>>>> 8a6ca04f27b6b1b4bee6e60b7a9e496ebc38db32
         }
     }
 }
@@ -249,7 +254,11 @@ class Consumer implements Runnable{
     int id;
 
     //@ predicate pre() = ConsumerInv(this);
+<<<<<<< HEAD
+    //@ predicate post() = ConsumerInv(this);
+=======
     //@ predicate post() = emp;
+>>>>>>> 8a6ca04f27b6b1b4bee6e60b7a9e496ebc38db32
     public Consumer(CQueue q, int id)
     //@ requires q != null &*& frac(?f) &*& [f]CQueueInv(q) &*& id >= 0;
     //@ ensures ConsumerInv(this);
@@ -265,6 +274,9 @@ class Consumer implements Runnable{
         while(true)
         //@ invariant ConsumerInv(this);
         {
+<<<<<<< HEAD
+            q.dequeue();
+=======
             A a = q.dequeue();
             
             //try {
@@ -272,6 +284,7 @@ class Consumer implements Runnable{
 	    //} catch (InterruptedException e) {
 	    //e.printStackTrace();
 	    //}
+>>>>>>> 8a6ca04f27b6b1b4bee6e60b7a9e496ebc38db32
         }
     }
 }
@@ -292,7 +305,11 @@ class ProducerConsumer {
             //@ close frac(f/2);
             new Thread(new Producer(q,i)).start();
             //@ close frac(f/4);
+<<<<<<< HEAD
+            new Thread(new Consumer(q,i+100)).start();
+=======
             new Thread(new Consumer(q,100+i)).start();
+>>>>>>> 8a6ca04f27b6b1b4bee6e60b7a9e496ebc38db32
             //@ close frac(f/4);
         }
     }
