@@ -200,15 +200,7 @@ class CQueue {
 
 //@predicate frac(real f) = true;
 
-/*@
-    predicate ConsumerInv(Consumer c;) = 
-            c.q |-> ?q
-        &*& q != null 
-        &*& [_]CQueueInv(q)
-        &*& c.id |-> ?v
-        &*& v >= 0
-        ;
-@*/
+
 
 class Producer implements Runnable{
     CQueue q;
