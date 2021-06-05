@@ -221,7 +221,7 @@ class Producer implements Runnable{
         //@ invariant ProducerInv(this);
         {
             q.enqueue(new A(id));
-            
+            System.out.println(id);
         }
     }
 }
