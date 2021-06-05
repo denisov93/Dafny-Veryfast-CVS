@@ -111,9 +111,9 @@ predicate_ctor CQueueSharedState_notfull(CQueue c)(;) =
         c.q |-> ?q &*& q != null &*& QueueInv(q, ?n, ?m) &*& n < m;
 
 predicate CQueueInv(CQueue c;) = 
-        c.mon |-> ?l
+            c.mon |-> ?l
         &*& l != null
-        &*& l lck(l,l,CQueueSharedState(c));
+        &*& lck(l,l,CQueueSharedState(c))
 
         &*& c.notempty |-> ?c1
         &*& c1 != null
@@ -122,8 +122,10 @@ predicate CQueueInv(CQueue c;) =
         &*& c.notfull |-> ?c2
         &*& c2 != null
         &*& cond(c2, CQueueSharedState(c), CQueueSharedState_notfull(c))
+        ;
 @*/
-  class CQueue {
+
+class CQueue {
     Queue q;
     ReentrantLock mon;
     Condition notempty;
@@ -167,7 +169,7 @@ predicate CQueueInv(CQueue c;) =
                 notempty.await();
                 //@ open CQueueSharedState_notempty(this)();
           }
-          //@ open QueueInv(q,_,_)
+          //@ open QueueInv(q,_,_);
           A v = q.dequeue();
           mon.unlock();
           notfull.signal();
@@ -177,11 +179,12 @@ predicate CQueueInv(CQueue c;) =
 
 /*@
     predicate ProducerInv(Producer p;) = 
-        p.q |-> ?q
+            p.q |-> ?q
         &*& q != null 
         &*& [_]CQueueInv(q)
         &*& p.id |-> ?v
         &*& v >= 0
+        ;
 @*/
 
 //@predicate fraq(real f) = true;
@@ -200,9 +203,10 @@ class Producer implements Runnable{
         this.id = id;
     }
 
-    public void run(){
+    public void run()
         //@ requires pre();
         //@ ensures post();
+    {
         while(true)
         //@ invariant ProducerInv(this);
         {
