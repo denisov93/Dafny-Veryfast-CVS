@@ -113,7 +113,7 @@ predicate_ctor CQueueSharedState_notfull(CQueue c)(;) =
 predicate CQueueInv(CQueue c;) = 
             c.mon |-> ?l
         &*& l != null
-        &*& lck(l,l,CQueueSharedState(c))
+        &*& lck(l, 1, CQueueSharedState(c))
 
         &*& c.notempty |-> ?c1
         &*& c1 != null
@@ -137,7 +137,7 @@ class CQueue {
     {
         q = new Queue(size);
         //@ close CQueueSharedState(this)();
-        //@ close enter_lck(l, CQueueSharedState(this));
+        //@ close enter_lck(1, CQueueSharedState(this));
         mon = new ReentrantLock();
         //@ close set_cond(CQueueSharedState(this), CQueueSharedState_notempty(this));
         notempty = mon.newCondition();
@@ -150,7 +150,7 @@ class CQueue {
       //@ ensures [f]CQueueInv(this);
       {
           mon.lock();
-          if(!q.isFull()){
+          if(q.isFull()){
                 notfull.await();
                 //@ open CQueueSharedState_notfull(this)();
           }
@@ -165,14 +165,14 @@ class CQueue {
       //@ ensures [f]CQueueInv(this);
       {
           mon.lock();
-          if(!q.isEmpty()){
+          if( q.isEmpty()){
                 notempty.await();
                 //@ open CQueueSharedState_notempty(this)();
           }
           //@ open QueueInv(q,_,_);
           A v = q.dequeue();
-          mon.unlock();
           notfull.signal();
+          mon.unlock();
           return v;
       }
   }
@@ -187,7 +187,7 @@ class CQueue {
         ;
 @*/
 
-//@predicate fraq(real f) = true;
+//@predicate frac(real f) = true;
 
 class Producer implements Runnable{
     CQueue q;
@@ -231,11 +231,11 @@ class ProducerConsumer {
         for( int i = 0; i < 10; i++ )
         //@ invariant 0 <= i &*& i <= 10 &*& frac(?f) &*& [f]CQueueInv(q);
         {
-            //@open fraq(f);
-            //@close fraq(f/2);
+            //@ open frac(f);
+            //@ close frac(f/2);
             new Thread(new Producer(q,i)).start();
-            //@close fraq(f/2);
-            new Thread(new Consumer(q)).start();
+            //@ close frac(f/2);
+            //new Thread(new Consumer(q)).start();
         }
     }
 }
