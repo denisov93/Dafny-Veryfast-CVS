@@ -225,7 +225,7 @@ class Producer implements Runnable{
         {
             A a = new A(id);
             q.enqueue(a);
-            //System.out.println("P[id:"+id+"] Enqueued["+ a.a +"]");
+            //System.out.println(id);
          
             //try {
             //	Thread.sleep(100);
