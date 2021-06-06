@@ -1,5 +1,4 @@
 import java.util.concurrent.locks.*;
-import java.lang.System.out;
 
 /*@
 predicate Valid(unit a, A o; unit b) = o != null &*& AInv(o) &*& b == unit;
@@ -7,18 +6,23 @@ predicate Valid(unit a, A o; unit b) = o != null &*& AInv(o) &*& b == unit;
 predicate AInv(A o;) = o.a |-> ?v &*& v >= 0;
 
 predicate QueueInv(Queue q; int n, int m) = 
-	q.array |-> ?a
+	q.input |-> ?a
+    &*& q.output |-> ?b
     &*& a != null
+    &*& b != null
     &*& q.numelements |-> n
+    //&*& (a != b ? true : false)
     &*& m == a.length
+    &*& a.length == b.length
     &*& q.head |-> ?h
     &*& q.tail |-> ?t
     &*& 0 <= h &*& h < a.length
     &*& 0 <= t &*& t < a.length
-    &*& (h==t? n==0 || n==a.length : true)
-    &*& (h>t? n==h-t : true)
-    &*& (h<t? n==h-t + a.length : true)
-  
+    &*& (h==t ? n==0 || n==a.length : true)
+    &*& (h>t ? n==h-t : true)
+    &*& (h<t ? n==h-t + a.length : true)
+    
+
     &*& (h>t || h==t && n==0 ?
     	    array_slice(a,0,t,?out1)
     	&*& array_slice_deep(a,t,h,Valid, unit, ?in, _)
@@ -28,6 +32,8 @@ predicate QueueInv(Queue q; int n, int m) =
     	&*& array_slice(a,h,t,?out)
     	&*& array_slice_deep(a,t,a.length,Valid, unit,?in2,_)
         )
+    
+        
     ; 
 @*/
 
@@ -45,17 +51,20 @@ class A{
 
 //Queue based on a circular buffer.
 class Queue {
-    A[] array;
+    A[] input;
+    A[] output;
     int numelements;
     int head;
     int tail;
   
     //creates a new Queue with capacity max.
     Queue(int size)
+    
     //@ requires size > 0;
     //@ ensures QueueInv(this,0,size);
     {
-        array = new A[size];
+        input = new A[size];
+        output = new A[size];
         numelements = 0;
         head = 0;
         tail = 0;
@@ -66,8 +75,8 @@ class Queue {
     //@ requires QueueInv(this,?n,?m) &*& v!=null &*& AInv(v) &*& n < m;
     //@ ensures QueueInv(this,n+1,m);
     {
-        array[head++] = v;
-        if(head == array.length) head = 0;
+        input[head++] = v;
+        if(head == input.length) head = 0;
         numelements++;
     }
   
@@ -76,10 +85,22 @@ class Queue {
     //@ requires QueueInv(this,?n,?m) &*& n>0;
     //@ ensures QueueInv(this,n-1,m);
     {
-        A v = array[tail++];
-        array[tail-1] = null;
+        /*
+        if (tail == 0){
+                flush();
+            }
+
+            A v = output[tail];
+            output[tail] = null;
+            tail--;
+            numelements--;
+            return v;   
+        */
+
+        A v = input[tail++];
+        input[tail-1] = null;
         numelements--;
-        if(tail==array.length) tail=0;
+        if(tail==input.length) tail=0;
         return v;
     }
     
@@ -88,7 +109,7 @@ class Queue {
     //@ requires QueueInv(this,?n,?m);
     //@ ensures QueueInv(this,n,m) &*& result == (n==m);
     {
-        return numelements== array.length;
+        return numelements== input.length;
     }
     
     //returns true if this Queue has no elements.
@@ -98,7 +119,23 @@ class Queue {
     {
         return numelements == 0;
     }
-  
+  /*
+    void flush()
+    //@ requires QueueInv(this,?n,?m) ;
+    //@ ensures QueueInv(this,n,m) ;
+    {
+        
+        while (head > 0)
+        //@ invariant QueueInv(this,n,m);
+        {
+            output[tail] = input[head-1];
+            head-=1;
+            tail+=1;
+            
+        }
+        
+    }
+    */
   }
 
 /*@
@@ -271,15 +308,17 @@ class Consumer implements Runnable{
 class ProducerConsumer {
 
     public static void main(String []args)
-    //@ requires true;
+    //@ requires System_out(?o) &*& o != null;
     //@ ensures true;
     {
+        //System.out.println("...");
         CQueue q = new CQueue(10);
         //@ assert CQueueInv(q);
         //@ close frac(1);
         for( int i = 0; i < 10; i++ )
-        //@ invariant 0 <= i &*& i <= 10 &*& frac(?f) &*& [f]CQueueInv(q);
+        //@ invariant 0 <= i &*& i <= 10 &*& frac(?f) &*& [f]CQueueInv(q) &*& System_out(?z) &*& z != null;
         {
+            System.out.println("...");
             //@ open frac(f);
             //@ close frac(f/2);
             new Thread(new Producer(q,i)).start();
@@ -288,4 +327,5 @@ class ProducerConsumer {
             //@ close frac(f/4);
         }
     }
+
 }
