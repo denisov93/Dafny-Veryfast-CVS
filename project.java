@@ -11,27 +11,22 @@ predicate QueueInv(Queue q; int n, int m) =
     &*& a != null
     &*& b != null
     &*& q.numelements |-> n
-    //&*& (a != b ? true : false)
+    //pode escrever e ler na pos de vetor 
     &*& m == a.length
     &*& a.length == b.length
     &*& q.head |-> ?h
     &*& q.tail |-> ?t
-    &*& 0 <= h &*& h < a.length
-    &*& 0 <= t &*& t < a.length
-    &*& (h==t ? n==0 || n==a.length : true)
-    &*& (h>t ? n==h-t : true)
-    &*& (h<t ? n==h-t + a.length : true)
+    &*& 0 <= h &*& h <= a.length
+    &*& 0 <= t &*& t <= a.length
+    &*& h+t == n &*& h+t <= m
     
-
-    &*& (h>t || h==t && n==0 ?
-    	    array_slice(a,0,t,?out1)
-    	&*& array_slice_deep(a,t,h,Valid, unit, ?in, _)
-    	&*& array_slice(a, h, a.length, ?out2)
-    	:
-    	    array_slice_deep(a,0,h,Valid, unit,?in1,_)
-    	&*& array_slice(a,h,t,?out)
-    	&*& array_slice_deep(a,t,a.length,Valid, unit,?in2,_)
-        )
+    //&*& array_slice(a,0,h,?in1)
+    &*& array_slice_deep(a,0,h,Valid, unit, ?in, _)
+    &*& array_slice(a, h, a.length, ?out2)
+    	//mesmo para b
+    //&*& array_slice(b,0,t,?out3)
+    &*& array_slice_deep(b,0,t,Valid, unit, ?in2, _)
+    &*& array_slice(b, t, b.length, ?out4)	
     
         
     ; 
@@ -76,7 +71,7 @@ class Queue {
     //@ ensures QueueInv(this,n+1,m);
     {
         input[head++] = v;
-        if(head == input.length) head = 0;
+
         numelements++;
     }
   
@@ -85,7 +80,7 @@ class Queue {
     //@ requires QueueInv(this,?n,?m) &*& n>0;
     //@ ensures QueueInv(this,n-1,m);
     {
-        /*
+        
         if (tail == 0){
                 flush();
             }
@@ -95,13 +90,7 @@ class Queue {
             tail--;
             numelements--;
             return v;   
-        */
-
-        A v = input[tail++];
-        input[tail-1] = null;
-        numelements--;
-        if(tail==input.length) tail=0;
-        return v;
+        
     }
     
     //returns true if this Queue has reached its capacity.
@@ -119,7 +108,7 @@ class Queue {
     {
         return numelements == 0;
     }
-  /*
+  
     void flush()
     //@ requires QueueInv(this,?n,?m) ;
     //@ ensures QueueInv(this,n,m) ;
@@ -135,7 +124,7 @@ class Queue {
         }
         
     }
-    */
+    
   }
 
 /*@
