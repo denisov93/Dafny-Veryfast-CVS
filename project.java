@@ -14,21 +14,22 @@ predicate QueueInv(Queue q; int n, int m) =
     //pode escrever e ler na pos de vetor 
     &*& m == a.length
     &*& a.length == b.length
-    &*& q.head |-> ?h
-    &*& q.tail |-> ?t
+    &*& q.in_n |-> ?h
+    &*& q.out_n |-> ?t
     &*& 0 <= h &*& h <= a.length
-    &*& 0 <= t &*& t <= a.length
-    &*& h+t == n &*& h+t <= m
+    &*& 0 <= t &*& t <= b.length
+    &*& h+t == n 
+    &*& h+t <= m
+    &*& n >= 0 
     
-    //&*& array_slice(a,0,h,?in1)
     &*& array_slice_deep(a,0,h,Valid, unit, ?in, _)
     &*& array_slice(a, h, a.length, ?out2)
-    	//mesmo para b
-    //&*& array_slice(b,0,t,?out3)
-    &*& array_slice_deep(b,0,t,Valid, unit, ?in2, _)
-    &*& array_slice(b, t, b.length, ?out4)	
     
-        
+    //&*& array_slice(b,0,b.length,?out3)
+    &*& array_slice(b, t, b.length, ?out4)
+    &*& array_slice_deep(b,0,t,Valid, unit, ?in2, _)
+    	
+       
     ; 
 @*/
 
@@ -49,8 +50,8 @@ class Queue {
     A[] input;
     A[] output;
     int numelements;
-    int head;
-    int tail;
+    int in_n;
+    int out_n;
   
     //creates a new Queue with capacity max.
     Queue(int size)
@@ -61,8 +62,8 @@ class Queue {
         input = new A[size];
         output = new A[size];
         numelements = 0;
-        head = 0;
-        tail = 0;
+        in_n = 0;
+        out_n = 0;
     }
   
     //places the int v at the end of this Queue
@@ -70,7 +71,7 @@ class Queue {
     //@ requires QueueInv(this,?n,?m) &*& v!=null &*& AInv(v) &*& n < m;
     //@ ensures QueueInv(this,n+1,m);
     {
-        input[head++] = v;
+        input[in_n++] = v;
 
         numelements++;
     }
@@ -78,18 +79,19 @@ class Queue {
     //retrieves the element at the start of this Queue.
     A dequeue()
     //@ requires QueueInv(this,?n,?m) &*& n>0;
-    //@ ensures QueueInv(this,n-1,m);
+    //@ ensures QueueInv(this,n-1,m) &*& result != null &*& AInv(result);
     {
         
-        if (tail == 0){
+        if (out_n == 0){
                 flush();
             }
-
-            A v = output[tail];
-            output[tail] = null;
-            tail--;
+	
+            A v = output[out_n];
+            output[out_n] = null;
+            out_n--;
             numelements--;
-            return v;   
+            
+            return v ;   
         
     }
     
@@ -114,12 +116,12 @@ class Queue {
     //@ ensures QueueInv(this,n,m) ;
     {
         
-        while (head > 0)
+        while (in_n > 0)
         //@ invariant QueueInv(this,n,m);
         {
-            output[tail] = input[head-1];
-            head-=1;
-            tail+=1;
+            output[out_n] = input[in_n-1];
+            in_n-=1;
+            out_n+=1;
             
         }
         
