@@ -78,8 +78,8 @@ class Queue {
   
     //retrieves the element at the start of this Queue.
     A dequeue()
-    //@ requires QueueInv(this,?n,?m) &*& n>0;
-    //@ ensures QueueInv(this,n-1,m) &*& result != null &*& AInv(result);
+    //@ requires QueueInv(this,?n,?m) &*& n>0 &*& n < m;
+    //@ ensures QueueInv(this,n-1,m) &*& out_n >= 0 &*& result != null &*& AInv(result);
     {
         
         if (out_n == 0){
@@ -88,6 +88,7 @@ class Queue {
 	
             A v = output[out_n];
             output[out_n] = null;
+            
             out_n--;
             numelements--;
             
