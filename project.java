@@ -17,7 +17,7 @@ predicate QueueInv(Queue q; int h, int t, int m) =
     &*& a.length == b.length
     &*& 0 <= h &*& h <= m
     &*& 0 <= t &*& t <= m
-    &*& h+t <= 2*m
+    &*& h+t <= m
     &*& m > 0
     
     &*& array_slice_deep(a, 0, h, Valid, unit, ?in, _)
@@ -85,7 +85,7 @@ class Queue {
   
     //places the int v at the end of this Queue
     void enqueue(A v)
-    //@ requires QueueInv(this,?h,?t,?m) &*& v!=null &*& AInv(v) &*& h < m;
+    //@ requires QueueInv(this,?h,?t,?m) &*& v!=null &*& AInv(v) &*& h + t < m;
     //@ ensures QueueInv(this,h+1,t,m);
     {
         input[in_n] = v;
@@ -138,7 +138,7 @@ class Queue {
     	//@ close LoopInv(this,_,_,m);
         while (in_n > 0)
         ///@ invariant QueueInv(this,?h1,?t1,?m1);
-        //@ invariant LoopInv(this,?h1,?t1, m);
+        //@ invariant LoopInv(this,?h1,?t1, m) &*& h1+t1 == h;
         {
             output[out_n] = input[in_n-1];
             in_n-=1;
@@ -155,7 +155,7 @@ predicate_ctor CQueueSharedState_notempty(CQueue c)(;) =
         c.q |-> ?q &*& q != null &*& QueueInv(q, ?h, ?t, _) &*& h + t > 0;
 
 predicate_ctor CQueueSharedState_notfull(CQueue c)(;) =
-        c.q |-> ?q &*& q != null &*& QueueInv(q, ?h, ?t, ?m) &*& h < m;
+        c.q |-> ?q &*& q != null &*& QueueInv(q, ?h, ?t, ?m) &*& h + t < m;
 
 predicate CQueueInv(CQueue c;) = 
             c.mon |-> ?l
@@ -201,7 +201,7 @@ class CQueue {
                 notfull.await();
                 //@ open CQueueSharedState_notfull(this)();
           }
-          //@ open QueueInv(q,_,_);
+          //@ open QueueInv(q,?h,_,_);
           q.enqueue(v);
           notempty.signal();
           mon.unlock();
@@ -216,7 +216,7 @@ class CQueue {
                 notempty.await();
                 //@ open CQueueSharedState_notempty(this)();
           }
-          //@ open QueueInv(q,_,_);
+          //@ open QueueInv(q,_,_,_);
           A v = q.dequeue();
           notfull.signal();
           mon.unlock();
