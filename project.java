@@ -1,3 +1,7 @@
+//CVS Project - 10/06/2021
+//Alexander Denisov (44592)
+//Samuel Robalo (41936)
+
 import java.util.concurrent.locks.*;
 
 /*@
@@ -88,10 +92,11 @@ class Queue {
     //@ requires QueueInv(this,?h,?t,?m) &*& v!=null &*& AInv(v) &*& h + t < m;
     //@ ensures (h<m ? QueueInv(this,h+1,t,m) : QueueInv(this,h,t,m) );
     {
+    	
         if(in_n < input.length){
-        	input[in_n] = v;
-	        in_n++;
-        } 
+           input[in_n] = v;
+           in_n++;
+        }
     }
   
     //retrieves the element at the start of this Queue.
