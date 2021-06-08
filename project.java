@@ -5,31 +5,52 @@ predicate Valid(unit a, A o; unit b) = o != null &*& AInv(o) &*& b == unit;
 
 predicate AInv(A o;) = o.a |-> ?v &*& v >= 0;
 
-predicate QueueInv(Queue q; int n, int m) = 
+predicate QueueInv(Queue q; int h, int t, int m) = 
 	q.input |-> ?a
     &*& q.output |-> ?b
+    &*& q.in_n |-> h
+    &*& q.out_n |-> t
     &*& a != null
     &*& b != null
-    &*& q.numelements |-> n
     //pode escrever e ler na pos de vetor 
     &*& m == a.length
     &*& a.length == b.length
-    &*& q.in_n |-> ?h
-    &*& q.out_n |-> ?t
-    &*& 0 <= h &*& h <= a.length
-    &*& 0 <= t &*& t <= b.length
-    &*& h+t == n 
-    &*& h+t <= m
-    &*& n >= 0 
+    &*& 0 <= h &*& h <= m
+    &*& 0 <= t &*& t <= m
+    &*& h+t <= 2*m
+    &*& m > 0
     
-    &*& array_slice_deep(a,0,h,Valid, unit, ?in, _)
-    &*& array_slice(a, h, a.length, ?out2)
+    &*& array_slice_deep(a, 0, h, Valid, unit, ?in, _)
+    &*& array_slice(a, h, m, ?out2)
     
     //&*& array_slice(b,0,b.length,?out3)
-    &*& array_slice(b, t, b.length, ?out4)
-    &*& array_slice_deep(b,0,t,Valid, unit, ?in2, _)
-    	
-       
+    &*& array_slice_deep(b, 0, t, Valid, unit, ?in2, _)
+    &*& array_slice(b, t, m, ?out4)
+
+    ; 
+    
+predicate LoopInv(Queue q; int h, int t, int m) = 
+	q.input |-> ?a
+    &*& q.output |-> ?b
+    &*& q.in_n |-> h
+    &*& q.out_n |-> t
+    &*& a != null
+    &*& b != null
+    //pode escrever e ler na pos de vetor 
+    &*& m == a.length
+    &*& a.length == b.length
+    &*& 0 <= h &*& h <= m
+    &*& 0 <= t &*& t <= m
+    &*& h+t <= m
+    &*& m > 0
+    
+    &*& array_slice_deep(a, 0, h, Valid, unit, ?in, _)
+    &*& array_slice(a, h, m, ?out2)
+    
+    //&*& array_slice(b,0,b.length,?out3)
+    &*& array_slice_deep(b, 0, t, Valid, unit, ?in2, _)
+    &*& array_slice(b, t, m, ?out4)
+
     ; 
 @*/
 
@@ -45,39 +66,35 @@ class A{
 }
 
 
-//Queue based on a circular buffer.
 class Queue {
     A[] input;
     A[] output;
-    int numelements;
     int in_n;
     int out_n;
   
     //creates a new Queue with capacity max.
     Queue(int size)
-    
     //@ requires size > 0;
-    //@ ensures QueueInv(this,0,size);
+    //@ ensures QueueInv(this,0,0,size);
     {
         input = new A[size];
         output = new A[size];
-        numelements = 0;
         in_n = 0;
         out_n = 0;
     }
   
     //places the int v at the end of this Queue
     void enqueue(A v)
-    //@ requires QueueInv(this,?n,?m) &*& v!=null &*& AInv(v) &*& n < m;
-    //@ ensures QueueInv(this,n+1,m);
+    //@ requires QueueInv(this,?h,?t,?m) &*& v!=null &*& AInv(v) &*& h < m;
+    //@ ensures QueueInv(this,h+1,t,m);
     {
-        input[in_n++] = v;
-
-        numelements++;
+        input[in_n] = v;
+	in_n++;
     }
   
     //retrieves the element at the start of this Queue.
     A dequeue()
+<<<<<<< HEAD
     //@ requires QueueInv(this,?n,?m) &*& n>0 &*& n < m;
     //@ ensures QueueInv(this,n-1,m) &*& out_n >= 0 &*& result != null &*& AInv(result);
     {
@@ -93,52 +110,70 @@ class Queue {
             numelements--;
             
             return v ;   
+=======
+    //@ requires QueueInv(this,?h,?t,?m) &*& h+t > 0;
+    //@ ensures (t == 0 ? QueueInv(this,0,h-1,m) : QueueInv(this,h,t-1,m)) &*& result != null &*& AInv(result);
+    {
         
+        if(out_n == 0){
+            flush();
+        }
+        
+        out_n -= 1;
+        A v = output[out_n];
+>>>>>>> c8d2f8670dd42704eb11cf757a7947fb29c8c858
+        
+        
+        //if(out_n > 0){
+        //    out_n -= 1;
+        //}else{
+        //    out_n = 0;
+        //}
+
+        return v;   
     }
     
     //returns true if this Queue has reached its capacity.
     boolean isFull()
-    //@ requires QueueInv(this,?n,?m);
-    //@ ensures QueueInv(this,n,m) &*& result == (n==m);
+    //@ requires QueueInv(this,?h,?t,?m);
+    //@ ensures QueueInv(this,h,t,m) &*& result == (h+t==m);
     {
-        return numelements== input.length;
+        return in_n + out_n == input.length;
     }
     
     //returns true if this Queue has no elements.
     boolean isEmpty()
-    //@ requires QueueInv(this,?n,?m);
-    //@ ensures QueueInv(this,n,m) &*& result == (n==0);
+    //@ requires QueueInv(this,?h,?t,?m);
+    //@ ensures QueueInv(this,h,t,m) &*& result == (h+t==0);
     {
-        return numelements == 0;
+        return in_n + out_n == 0;
     }
   
     void flush()
-    //@ requires QueueInv(this,?n,?m) ;
-    //@ ensures QueueInv(this,n,m) ;
+    //@ requires QueueInv(this,?h,?t,?m) &*& t == 0 &*& h > 0;
+    //@ ensures QueueInv(this,0,h,m);
     {
-        
+    	//@ close LoopInv(this,_,_,m);
         while (in_n > 0)
-        //@ invariant QueueInv(this,n,m);
+        ///@ invariant QueueInv(this,?h1,?t1,?m1);
+        //@ invariant LoopInv(this,?h1,?t1, m);
         {
             output[out_n] = input[in_n-1];
             in_n-=1;
             out_n+=1;
-            
         }
-        
     }
-    
   }
 
 /*@
 predicate_ctor CQueueSharedState(CQueue c)(;) =
-        c.q |-> ?q &*& q != null &*& QueueInv(q, _, _);
+        c.q |-> ?q &*& q != null &*& QueueInv(q, _, _, _);
 
 predicate_ctor CQueueSharedState_notempty(CQueue c)(;) =
-        c.q |-> ?q &*& q != null &*& QueueInv(q, ?n, _) &*& n > 0;
+        c.q |-> ?q &*& q != null &*& QueueInv(q, ?h, ?t, _) &*& h + t > 0;
 
 predicate_ctor CQueueSharedState_notfull(CQueue c)(;) =
-        c.q |-> ?q &*& q != null &*& QueueInv(q, ?n, ?m) &*& n < m;
+        c.q |-> ?q &*& q != null &*& QueueInv(q, ?h, ?t, ?m) &*& h < m;
 
 predicate CQueueInv(CQueue c;) = 
             c.mon |-> ?l
@@ -304,18 +339,18 @@ class ProducerConsumer {
     //@ ensures true;
     {
         //System.out.println("...");
-        CQueue q = new CQueue(10);
+        CQueue q = new CQueue(100);
         //@ assert CQueueInv(q);
         //@ close frac(1);
-        for( int i = 0; i < 10; i++ )
-        //@ invariant 0 <= i &*& i <= 10 &*& frac(?f) &*& [f]CQueueInv(q) &*& System_out(?z) &*& z != null;
+        for( int i = 0; i < 100; i++ )
+        //@ invariant 0 <= i &*& i <= 100 &*& frac(?f) &*& [f]CQueueInv(q) &*& System_out(?z) &*& z != null;
         {
             System.out.println("...");
             //@ open frac(f);
             //@ close frac(f/2);
             new Thread(new Producer(q,i)).start();
             //@ close frac(f/4);
-            new Thread(new Consumer(q,100+i)).start();
+            new Thread(new Consumer(q,1000+i)).start();
             //@ close frac(f/4);
         }
     }
