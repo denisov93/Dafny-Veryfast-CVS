@@ -86,10 +86,15 @@ class Queue {
     //places the int v at the end of this Queue
     void enqueue(A v)
     //@ requires QueueInv(this,?h,?t,?m) &*& v!=null &*& AInv(v) &*& h + t < m;
-    //@ ensures QueueInv(this,h+1,t,m);
+    //@ ensures (h<m ? QueueInv(this,h+1,t,m) : QueueInv(this,h,t,m) );
     {
+        
+        if(in_n < input.length){
+        
         input[in_n] = v;
-	in_n++;
+        in_n++;
+        
+        } 
     }
   
     //retrieves the element at the start of this Queue.
@@ -103,16 +108,14 @@ class Queue {
         }
         
         out_n -= 1;
-        A v = output[out_n];
+        if(out_n >= 0){
+        return output[out_n];
+	}else{
+	
+	return null;
+	}        
         
-        
-        //if(out_n > 0){
-        //    out_n -= 1;
-        //}else{
-        //    out_n = 0;
-        //}
 
-        return v;   
     }
     
     //returns true if this Queue has reached its capacity.
@@ -198,7 +201,12 @@ class CQueue {
       {
           mon.lock();
           if(q.isFull()){
-                notfull.await();
+                try {
+					notfull.await();
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
                 //@ open CQueueSharedState_notfull(this)();
           }
           //@ open QueueInv(q,?h,_,_);
@@ -213,7 +221,12 @@ class CQueue {
       {
           mon.lock();
           if( q.isEmpty()){
-                notempty.await();
+                try {
+					notempty.await();
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
                 //@ open CQueueSharedState_notempty(this)();
           }
           //@ open QueueInv(q,_,_,_);
@@ -275,13 +288,9 @@ class Producer implements Runnable{
             q.enqueue(a);
             ///@ open frac(f);
             //@ close frac(f/2);
-            System.out.println("Enqeued");//String.value_of(id));
+            System.out.println("Enqeued: "+String.valueOf(id));//String.valueOf(id));
             //@ close frac(f/2);
-            //try {
             //	Thread.sleep(100);
-	    //} catch (InterruptedException e) {
-            //e.printStackTrace();
-	    //}
         }
     }
 }
@@ -290,7 +299,7 @@ class Consumer implements Runnable{
     CQueue q;
     int id;
 
-    //@ predicate pre() = ConsumerInv(this);
+    //@ predicate pre() = ConsumerInv(this) &*& [_]System_out(?z) &*& z != null ;
     //@ predicate post() = emp;
     public Consumer(CQueue q, int id)
     //@ requires q != null &*& frac(?f) &*& [f]CQueueInv(q) &*& id >= 0;
@@ -305,15 +314,13 @@ class Consumer implements Runnable{
         //@ ensures post();
     {
         while(true)
-        //@ invariant ConsumerInv(this);
+        //@ invariant ConsumerInv(this) &*& [?f]System_out(?z) &*& z != null;
         {
             A a = q.dequeue();
-            
-            //try {
-            //	Thread.sleep(100);
-	    //} catch (InterruptedException e) {
-	    //e.printStackTrace();
-	    //}
+			 //@ close frac(f/2);
+			 System.out.println("Enqeued: "+String.valueOf(id));//String.valueOf(id));
+			 //@ close frac(f/2);
+			//Thread.sleep(100);
         }
     }
 }
