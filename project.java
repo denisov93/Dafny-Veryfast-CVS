@@ -288,7 +288,7 @@ class Producer implements Runnable{
             q.enqueue(a);
             ///@ open frac(f);
             //@ close frac(f/2);
-            System.out.println("Enqeued: "+String.valueOf(id));//String.valueOf(id));
+            System.out.println("Producer["+String.valueOf(id)+"] Enqueued: "+String.valueOf(a.a));
             //@ close frac(f/2);
             //	Thread.sleep(100);
         }
@@ -318,7 +318,7 @@ class Consumer implements Runnable{
         {
             A a = q.dequeue();
 			 //@ close frac(f/2);
-			 System.out.println("Enqeued: "+String.valueOf(id));//String.valueOf(id));
+			 System.out.println("Consumer["+String.valueOf(id)+"] Dequeued: "+String.valueOf(a.a));
 			 //@ close frac(f/2);
 			//Thread.sleep(100);
         }
