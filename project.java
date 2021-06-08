@@ -252,7 +252,7 @@ class Producer implements Runnable{
     CQueue q;
     int id;
 
-    //@ predicate pre() = ProducerInv(this);
+    //@ predicate pre() = ProducerInv(this) &*& [_]System_out(?z) &*& z != null ;
     //@ predicate post() = emp;
     public Producer(CQueue q, int id)
     //@ requires q != null &*& frac(?f) &*& [f]CQueueInv(q) &*& id >= 0;
@@ -266,13 +266,17 @@ class Producer implements Runnable{
         //@ requires pre();
         //@ ensures post();
     {
+    
+    //System.out.println("hh");
         while(true)
-        //@ invariant ProducerInv(this);
+        //@ invariant ProducerInv(this) &*& [?f]System_out(?z) &*& z != null;
         {
             A a = new A(id);
             q.enqueue(a);
-            //System.out.println(id);
-         
+            ///@ open frac(f);
+            //@ close frac(f/2);
+            System.out.println("Enqeued");//String.value_of(id));
+            //@ close frac(f/2);
             //try {
             //	Thread.sleep(100);
 	    //} catch (InterruptedException e) {
@@ -325,7 +329,7 @@ class ProducerConsumer {
         //@ assert CQueueInv(q);
         //@ close frac(1);
         for( int i = 0; i < 100; i++ )
-        //@ invariant 0 <= i &*& i <= 100 &*& frac(?f) &*& [f]CQueueInv(q) &*& System_out(?z) &*& z != null;
+        //@ invariant 0 <= i &*& i <= 100 &*& frac(?f) &*& [f]CQueueInv(q) &*& [_]System_out(?z) &*& z != null;
         {
             System.out.println("...");
             //@ open frac(f);
