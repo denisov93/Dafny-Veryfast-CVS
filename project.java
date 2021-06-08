@@ -88,12 +88,9 @@ class Queue {
     //@ requires QueueInv(this,?h,?t,?m) &*& v!=null &*& AInv(v) &*& h + t < m;
     //@ ensures (h<m ? QueueInv(this,h+1,t,m) : QueueInv(this,h,t,m) );
     {
-        
         if(in_n < input.length){
-        
-        input[in_n] = v;
-        in_n++;
-        
+        	input[in_n] = v;
+	        in_n++;
         } 
     }
   
@@ -109,13 +106,10 @@ class Queue {
         
         out_n -= 1;
         if(out_n >= 0){
-        return output[out_n];
-	}else{
-	
-	return null;
-	}        
-        
-
+        	return output[out_n];
+        }else{
+        	return null;
+        }        
     }
     
     //returns true if this Queue has reached its capacity.
@@ -140,7 +134,6 @@ class Queue {
     {
     	//@ close LoopInv(this,_,_,m);
         while (in_n > 0)
-        ///@ invariant QueueInv(this,?h1,?t1,?m1);
         //@ invariant LoopInv(this,?h1,?t1, m) &*& h1+t1 == h;
         {
             output[out_n] = input[in_n-1];
@@ -202,11 +195,10 @@ class CQueue {
           mon.lock();
           if(q.isFull()){
                 try {
-					notfull.await();
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+		   notfull.await();
+		} catch (InterruptedException e) {
+		   e.printStackTrace();
+		}
                 //@ open CQueueSharedState_notfull(this)();
           }
           //@ open QueueInv(q,?h,_,_);
@@ -222,11 +214,10 @@ class CQueue {
           mon.lock();
           if( q.isEmpty()){
                 try {
-					notempty.await();
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+                   notempty.await();
+		} catch (InterruptedException e) {
+		   e.printStackTrace();
+		}
                 //@ open CQueueSharedState_notempty(this)();
           }
           //@ open QueueInv(q,_,_,_);
@@ -279,18 +270,15 @@ class Producer implements Runnable{
         //@ requires pre();
         //@ ensures post();
     {
-    
-    //System.out.println("hh");
+
         while(true)
         //@ invariant ProducerInv(this) &*& [?f]System_out(?z) &*& z != null;
         {
             A a = new A(id);
             q.enqueue(a);
-            ///@ open frac(f);
             //@ close frac(f/2);
-            System.out.println("Producer["+String.valueOf(id)+"] Enqueued: "+String.valueOf(a.a));
+            System.out.println("Producer["+String.valueOf(id)+"] Enqueued: "+String.valueOf(id));
             //@ close frac(f/2);
-            //	Thread.sleep(100);
         }
     }
 }
@@ -318,7 +306,7 @@ class Consumer implements Runnable{
         {
             A a = q.dequeue();
 			 //@ close frac(f/2);
-			 System.out.println("Consumer["+String.valueOf(id)+"] Dequeued: "+String.valueOf(a.a));
+			 System.out.println("Consumer["+String.valueOf(id)+"] Dequeued");
 			 //@ close frac(f/2);
 			//Thread.sleep(100);
         }
@@ -331,21 +319,18 @@ class ProducerConsumer {
     //@ requires System_out(?o) &*& o != null;
     //@ ensures true;
     {
-        //System.out.println("...");
         CQueue q = new CQueue(100);
         //@ assert CQueueInv(q);
         //@ close frac(1);
         for( int i = 0; i < 100; i++ )
         //@ invariant 0 <= i &*& i <= 100 &*& frac(?f) &*& [f]CQueueInv(q) &*& [_]System_out(?z) &*& z != null;
         {
-            System.out.println("...");
             //@ open frac(f);
             //@ close frac(f/2);
-            new Thread(new Producer(q,i)).start();
+            new Thread(new Producer(q,2000+i)).start();
             //@ close frac(f/4);
-            new Thread(new Consumer(q,1000+i)).start();
+            new Thread(new Consumer(q,4000+i)).start();
             //@ close frac(f/4);
         }
     }
-
 }
